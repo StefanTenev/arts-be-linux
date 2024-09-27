@@ -12,7 +12,7 @@ export const AppDataSource = new DataSource({
     synchronize: false,
     logging: false,
     // ** remember to change paths if either this, or the entities/migration folders are changed **
-    entities: [__dirname + "../../entities/**/*.ts"],
+    entities: [__dirname + "/entities/**/*.ts"],
     migrations: [__dirname + "/migrations/**/*.ts"],
     subscribers: [],
     // "ts-node": {

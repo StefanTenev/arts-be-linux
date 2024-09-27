@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "baseUrl": "./src",
-    "paths": {
-      "@/*": ["*"],
-      "@database/*": ["database/*"],
-      "@controllers/*": ["app/controllers/*"],
-      "@routes/*": ["app/routes/*"],
-      "@entities/*": ["database/entities/*"],
-      "@middleware/*": ["middleware/*"],
-    },
+    // "paths": {
+    //   "@/*": ["*"],
+    //   "@database/*": ["database/*"],
+    //   "@controllers/*": ["app/controllers/*"],
+    //   "@routes/*": ["app/routes/*"],
+    //   "@entities/*": ["database/entities/*"],
+    //   "@middleware/*": ["middleware/*"],
+    // },
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     /* Projects */

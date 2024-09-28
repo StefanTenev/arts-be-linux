@@ -14,13 +14,11 @@ export default class UserController {
 
     // Arrow functions required to bind implicitly (instead of binding explicitly)
 
-    // get all users
     getAll = async ( _req: Request, res: Response ) => {
         const users = await this.userRepository.find();
         return res.json(users);
     }
 
-    // get user
     getOne = async ( req: Request, res: Response ) => {
         const user = await this.userRepository.findOne({
             where: { username: req.params.username }
@@ -119,5 +117,5 @@ export default class UserController {
                 .json({ message: "Failer to delete user: ", err})
         }
     }
-    
+
 }

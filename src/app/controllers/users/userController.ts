@@ -119,4 +119,5 @@ export default class UserController {
                 .json({ message: "Failer to delete user: ", err})
         }
     }
+    
 }

@@ -5,7 +5,8 @@ import { Request, Response } from 'express';
 
 import { 
     //registerUser, 
-    loginUser 
+    loginUser,
+    logoutUser
 } from '../controllers/authController';
 
 const authRoutes = express.Router();
@@ -36,5 +37,6 @@ authRoutes.post(
 );
 
 authRoutes.post("/login", loginUser);
+authRoutes.post("/logout", logoutUser);
 
 export default authRoutes

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { validateCsrfToken } from '../services/auth/csrfToken';
 import { IncomingHttpHeaders } from 'http';
+
+import CSRFT from '../services/auth/CSRFT';
 
 interface CSRFTokenRequest extends Request {
     headers: IncomingHttpHeaders & {
@@ -13,12 +14,14 @@ export const vCSRFTMiddleware = async (req: CSRFTokenRequest, res: Response, nex
     const csrfToken = req.headers['csrf-token']
     const userId = req.body.id
 
+    const csrft = new CSRFT(userId)
+
     if (!csrfToken) {
         return res.status(401).json({ message: 'Access denied. No csrf token provided.' });
     }
 
     try{
-        const isValid = await validateCsrfToken(userId, csrfToken)
+        const isValid = await csrft.validateToken(csrfToken)
     
         if(isValid){
             next();

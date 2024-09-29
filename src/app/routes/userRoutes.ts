@@ -1,6 +1,6 @@
 import express from "express";
 import UserController from "../controllers/users/userController";
-import { vCSRFTMiddleware } from '../middleware/verifyCSRFT'
+// import { vCSRFTMiddleware } from '../middleware/verifyCSRFT'
 
 const userRoutes = express.Router();
 
@@ -10,6 +10,6 @@ userRoutes.get('/', userController.getAll);
 userRoutes.get('/:username', userController.getOne);
 userRoutes.post('/', userController.post);
 userRoutes.put('/:username', userController.put);
-userRoutes.delete('/:id', vCSRFTMiddleware, userController.delete)
+userRoutes.delete('/:id', userController.delete)
 
 export default userRoutes 

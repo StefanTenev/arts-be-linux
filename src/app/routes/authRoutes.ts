@@ -3,10 +3,12 @@ import UserController from '../controllers/users/userController';
 import { body, validationResult } from 'express-validator';
 import { Request, Response } from 'express';
 
+
 import { 
     //registerUser, 
     loginUser,
-    logoutUser
+    logoutUser,
+    session
 } from '../controllers/authController';
 
 const authRoutes = express.Router();
@@ -38,5 +40,7 @@ authRoutes.post(
 
 authRoutes.post("/login", loginUser);
 authRoutes.post("/logout", logoutUser);
+
+authRoutes.post("/session", session)
 
 export default authRoutes

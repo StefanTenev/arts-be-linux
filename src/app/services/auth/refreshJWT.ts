@@ -32,22 +32,25 @@ export default class RefreshJWT {
         return refreshJWT
     }
 
+    getCurrentToken = async () => {
+        const storedToken = await redis.get(`refresh_jwt_token:${this.userId}`);
+        return storedToken ? storedToken : ''
+    } 
+
     validateToken = async (token: string | undefined): Promise<boolean> => {
 
-        const storedToken = await redis.get(`refresh_jwt_token:${this.userId}`);
+        const storedToken = await this.getCurrentToken();
         return token === storedToken; // Compare the received token with the stored token
 
     };
 
     invalidateToken = async (res: Response) => {
 
-        res.cookie('refreshToken', '', {
-            httpOnly: true,
-            path: '/login', // Same path as when the cookie was created
-            maxAge: 0, // Expire the cookie immediately
-          });
+        res.clearCookie('refreshJWT', { path: '/' });
+
 
         await redis.del(`refresh_jwt_token:${this.userId}`)
     }
 
 }
+

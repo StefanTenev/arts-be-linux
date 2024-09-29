@@ -32,9 +32,14 @@ export default class AccessJWT {
         
     }
 
+    getCurrentToken = async () => {
+        const storedToken = await redis.get(`access_jwt_token:${this.userId}`);
+        return storedToken ? storedToken : ''
+    } 
+
     validateToken = async (token: string | undefined): Promise<boolean> => {
 
-        const storedToken = await redis.get(`access_jwt_token:${this.userId}`);
+        const storedToken = await this.getCurrentToken()
         return token === storedToken; // Compare the received token with the stored token
 
     };

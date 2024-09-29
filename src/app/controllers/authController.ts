@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 import CSRFT from "../services/auth/CSRFT";
 import AccessJWT from "../services/auth/accessJWT";
 import RefreshJWT from "../services/auth/refreshJWT";
-
+import { getRefreshJWTHolder } from "../services/auth/getTokenHolder";
 
 export const loginUser = async (req: Request, res: Response) => {
     const { username, password } = req.body;
@@ -13,20 +13,15 @@ export const loginUser = async (req: Request, res: Response) => {
     const existingUser = await userRepository().findOne({
         where: { username }
     });
-    // console.log('Request body: ', req.body, 'username:  ', username, existingUser,
-    //     "request headers: ", req.headers
-    // )
 
     if(!existingUser){
-        console.log("USER DOES NOT EXIST!")
         return res.status(404)
             .json({ message: `User ${username} does not exist.` });
     }
-    console.log("USER EXISTS!")
-    const isMatch = await bcrypt.compare(password, existingUser.password_hash);
 
-    if(!isMatch){
-        console.log("INCORRECT PASSWORD: ", isMatch)
+    const correctPassword = await bcrypt.compare(password, existingUser.password_hash);
+
+    if(!correctPassword){
         return res.status(401)
         .json({ message: "Invalid credentials." });
     }
@@ -35,8 +30,6 @@ export const loginUser = async (req: Request, res: Response) => {
     const accessJWT = new AccessJWT(existingUser.username, existingUser.id)
     const refreshJWT = new RefreshJWT(existingUser.username, existingUser.id)
     
-    console.log("CORRECT PASSWORD: ", isMatch)
-    // @TODO - Check if the username auto assigns the same property in the service
     const accessToken = await accessJWT.generateToken();
     const refreshToken = await refreshJWT.generateToken();
     const csrfToken = await csrft.generateToken() 
@@ -48,10 +41,11 @@ export const loginUser = async (req: Request, res: Response) => {
             { 
                 httpOnly: true, 
                 maxAge: 1000 * 60 * 60 * 24,
-                path: "/login"
+                sameSite: 'none',
+                path: "/",
+                secure: true,
             }
         )
-
         .json({ 
                 message: `User ${username} authenticated successfully.`,
                 accessToken,
@@ -64,16 +58,58 @@ export const loginUser = async (req: Request, res: Response) => {
     
 }
 
-// @TODO - consider not-sending csrft/access jwt here and jsut keeping it to the front end (to get rid of excess code)
 // @ TODO - consider logic for validating the user...
 export const logoutUser = async (req: Request, res: Response) => {
 
     const {username, userId} = req.body;
 
-    new CSRFT(userId).invalidateToken()
-    new RefreshJWT(username, userId).invalidateToken(res)
-    new AccessJWT(username, userId).invalidateToken()
+    await new CSRFT(userId).invalidateToken()
+    // await new RefreshJWT(username, userId).invalidateToken(res)
+    await new AccessJWT(username, userId).invalidateToken()
 
-      res.status(200).json({ message: 'Logged out successfully', CSRFT: '', accessJWT: ''});
+    res.clearCookie('refreshJWT', {path:  '/'})
+    res.status(200).json({ message: 'Logged out successfully'});
+
+}
+
+export const session = async (req: Request, res: Response) => {
+    console.log(req.cookies)
+    const refreshToken = req.cookies["refreshJWT"]
+
+    if(!refreshToken){
+        return res.status(401).json({ message: "No refresh token found." })
+    }
+
+    const username = await getRefreshJWTHolder(refreshToken);
+
+
+    const existingUser = await userRepository().findOne({
+        where: { username: username}
+    })
+
+
+    if(existingUser){
+        const csrft = new CSRFT(existingUser.id)
+        const accessJWT = new AccessJWT(username, existingUser.id)
+
+        const currentCSRFT = await csrft.getCurrentToken();
+        const csrfToken = currentCSRFT ? currentCSRFT : await csrft.generateToken()
+
+        const currentAccessJWT = await accessJWT.getCurrentToken();
+        const accessToken = currentAccessJWT ? currentAccessJWT : await accessJWT.generateToken()
+
+        return res.status(200).json({ 
+            message:"successfully retrieved session", 
+            csrfToken, 
+            accessToken ,
+            user: {
+                username: existingUser.username,
+                id: existingUser.id,
+                email: existingUser.email
+            },
+        })
+    }
+
+    return res.status(404).json({ message: "fak yo faqer"})
 
 }

@@ -3,6 +3,9 @@ import AccessJWT from 'app/services/auth/accessJWT';
 import RefreshJWT from 'app/services/auth/refreshJWT';
 import jwt, {JwtPayload} from 'jsonwebtoken';
 
+
+//@TODO - this whole faking mess needs a fix
+
 interface customRequest extends Request {
     user: JwtPayload | undefined
 }
@@ -28,24 +31,30 @@ export const vJWTMiddleware = async (req: Request, res: Response, next: NextFunc
   if(accessToken){
 
     jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET as string, async(err, payload) => {
+
       const isValid = await accessJWT.validateToken(accessToken)
       if (err || isValid) return res.status(401).json({ message: 'Invalid access token.' }); // Invalid token
+
       (req as customRequest).user = payload as JwtPayload;
       next();
+
     });
 
   }
 
   if(!accessToken && refreshToken){
 
+    //@TODO - have to check if this return actually returns a response out of the middleware, or just out of the jwt verify (not sure how the jwt.verify works fully)
+
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string, async (err) => {
+
       const isValid = await refreshJWT.validateToken(accessToken)
       if (err || isValid) return res.status(401).json({ message: 'Invalid refresh token.' }); // Invalid token
-      console.log('REFRESH VERIFIED')
-      // generate a new access token
+
       accessToken = await accessJWT.generateToken()
       res.status(200).json({ accessToken })
       next();
+
     });
 
   }

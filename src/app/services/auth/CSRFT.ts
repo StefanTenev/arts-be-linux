@@ -3,7 +3,7 @@ import crypto from 'crypto';
 
 
 export default class CSRFT {
-    
+
     private userId: string;
 
     constructor ( userId: string ) {
@@ -17,8 +17,13 @@ export default class CSRFT {
         return csrfToken;
     };
 
-    validateToken = async (token: string | undefined): Promise<boolean> => {
+    getCurrentToken = async () => {
         const storedToken = await redis.get(`csrf_token:${this.userId}`);
+        return storedToken ? storedToken : ''
+    } 
+
+    validateToken = async (token: string | undefined): Promise<boolean> => {
+        const storedToken = await this.getCurrentToken();
         return token === storedToken; // Compare the received token with the stored token
     };
 

@@ -25,7 +25,6 @@ export const vCSRFTMiddleware = async (req: CSRFTokenRequest, res: Response, nex
     
         if(isValid){
             next();
-            return res.json({ message: "Authorised - valid CSRF token" })
         }
         return res.status(400).json({ message: 'Invalid CSRF token.', csrfToken: csrfToken });
     }
@@ -34,5 +33,3 @@ export const vCSRFTMiddleware = async (req: CSRFTokenRequest, res: Response, nex
     }
 };
 
-
-// curl -X DELETE http://localhost:3000/user/baa73396-7721-4f61-893f-e312732d6b61 -H "Content-Type: application/json" -d '{ "id": "user123", "csrf": "7d2f804d99d7f3c20fee81341ebe83d284caa6210cfa5d87b018e25c4343ce5c" }'

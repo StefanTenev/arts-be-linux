@@ -28,4 +28,7 @@ export class User {
 
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     created_at!: Date;
+
+    @Column({ default: 0 })
+    tokenVersion!: number;
 }

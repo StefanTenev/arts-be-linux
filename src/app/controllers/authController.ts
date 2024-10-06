@@ -61,13 +61,13 @@ export const loginUser = async (req: Request, res: Response) => {
 // @ TODO - consider logic for validating the user...
 export const logoutUser = async (req: Request, res: Response) => {
 
-    const {username, userId} = req.body;
+    const { userId } = req.body;
 
     await new CSRFT(userId).invalidateToken()
     // await new RefreshJWT(username, userId).invalidateToken(res)
-    await new AccessJWT(username, userId).invalidateToken()
+    // await new AccessJWT(username, userId).invalidateToken()
 
-    res.clearCookie('refreshJWT', {path:  '/'})
+    // res.clearCookie('refreshJWT', {path:  '/'})
     res.status(200).json({ message: 'Logged out successfully'});
 
 }
@@ -84,30 +84,37 @@ export const session = async (req: Request, res: Response) => {
 
 
     const existingUser = await userRepository().findOne({
-        where: { username: username}
+        where: { username: username }
     })
 
 
     if(existingUser){
-        const csrft = new CSRFT(existingUser.id)
-        const accessJWT = new AccessJWT(username, existingUser.id)
+        const newCSRFT = new CSRFT(existingUser.id).generateToken()
+        const newAccessJWT = new AccessJWT(username, existingUser.id).generateToken()
+        const newRefreshJWT = new RefreshJWT(username, existingUser.id).generateToken()
 
-        const currentCSRFT = await csrft.getCurrentToken();
-        const csrfToken = currentCSRFT ? currentCSRFT : await csrft.generateToken()
-
-        const currentAccessJWT = await accessJWT.getCurrentToken();
-        const accessToken = currentAccessJWT ? currentAccessJWT : await accessJWT.generateToken()
-
-        return res.status(200).json({ 
-            message:"successfully retrieved session", 
-            csrfToken, 
-            accessToken ,
-            user: {
-                username: existingUser.username,
-                id: existingUser.id,
-                email: existingUser.email
-            },
-        })
+        return res.status(200)
+            .cookie(
+                'refreshJWT', 
+                newRefreshJWT, 
+                { 
+                    httpOnly: true, 
+                    maxAge: 1000 * 60 * 60 * 24,
+                    sameSite: 'none',
+                    path: "/",
+                    secure: true,
+                }
+            )
+            .json({ 
+                message:"successfully retrieved session", 
+                newCSRFT, 
+                newAccessJWT,
+                user: {
+                    username: existingUser.username,
+                    id: existingUser.id,
+                    email: existingUser.email
+                },
+            })
     }
 
     return res.status(404).json({ message: "fak yo faqer"})

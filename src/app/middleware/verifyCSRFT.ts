@@ -24,7 +24,7 @@ export const vCSRFTMiddleware = async (req: CSRFTokenRequest, res: Response, nex
         const isValid = await csrft.validateToken(csrfToken)
     
         if(isValid){
-            next();
+           return next();
         }
         return res.status(400).json({ message: 'Invalid CSRF token.', csrfToken: csrfToken });
     }

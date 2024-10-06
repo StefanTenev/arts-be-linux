@@ -12,8 +12,7 @@ export default class CSRFT {
 
     generateToken = async (): Promise<string> => {
         const csrfToken = crypto.randomBytes(32).toString('hex');
-        await redis.set(`csrf_token:${this.userId}`, csrfToken);
-        await redis.expire(`csrf_token:${this.userId}`, 3600); // Expires in 1 hour
+ 
         return csrfToken;
     };
 

@@ -10,6 +10,8 @@ import {
     logoutUser,
     session
 } from '../controllers/authController';
+import { vJWTMiddleware } from '../middleware/verifyJWT';
+
 
 const authRoutes = express.Router();
 
@@ -41,6 +43,6 @@ authRoutes.post(
 authRoutes.post("/login", loginUser);
 authRoutes.post("/logout", logoutUser);
 
-authRoutes.post("/session", session)
+authRoutes.post("/session", vJWTMiddleware, session)
 
 export default authRoutes

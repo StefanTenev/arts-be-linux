@@ -31,7 +31,7 @@ export default class AccessJWT {
     generateToken = async () => {
         const tokenVersion = await getTokenVersion(this.userId)
         
-        if(!tokenVersion){
+        if(!tokenVersion && tokenVersion !== 0){
             return null
         }
         const expireTime = 900 // seconds = 15 min
@@ -53,17 +53,13 @@ export default class AccessJWT {
     // @TODO - think about having a singular false return an a better return in the catch
     validateToken = async (token: string, secretKey: string) => {
         const tokenVersion = await getTokenVersion(this.userId)
-        
-        if(!tokenVersion){
-            return false
-        }
 
         try{
             const decodedPayload: CustomPayload = await verifyJWT(token, secretKey)
-            if (decodedPayload.tokenVersion === tokenVersion){
-                return decodedPayload
+            if(decodedPayload.tokenVersion !== tokenVersion){
+                return false
             }
-            return false
+            return decodedPayload
         }
         catch(err){
             console.log('ERROR WHEN VALIDATING ACCESS TOKEN / INVALID TOKEN')

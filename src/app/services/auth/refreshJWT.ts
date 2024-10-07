@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import verifyJWT from './jwtVerifyWrapper';
 import { JwtPayload } from 'jsonwebtoken';
+import getTokenVersion from './getTokenVersion';
 
 interface CustomPayload extends JwtPayload {
     username?: string
@@ -13,21 +14,22 @@ interface CustomPayload extends JwtPayload {
 
 export default class RefreshJWT {
 
-    private username: string;
     private userId: string;
-    private tokenVersion: number
 
-    constructor ( username: string, userId: string, tokenVersion: number) {
-        this.username = username;
+    constructor ( userId: string ) {
         this.userId = userId;
-        this.tokenVersion = tokenVersion
     }
 
     generateToken = async () => {
+        const tokenVersion = await getTokenVersion(this.userId)
+        
+        if(!tokenVersion && tokenVersion !== 0){
+            return null
+        }
 
         const expireTime = 604800 // seconds = 7 days
         const refreshJWT = jwt.sign(
-            { username: this.username, tokenVersion: this.tokenVersion },
+            { userId: this.userId, tokenVersion },
             process.env.REFRESH_TOKEN_SECRET as string,
             {expiresIn: expireTime + 'd'}
         );
@@ -41,13 +43,15 @@ export default class RefreshJWT {
     // } 
 
     validateToken = async (token: string, secretKey: string) => {
+        const tokenVersion = await getTokenVersion(this.userId)
 
         try{
             const decodedPayload: CustomPayload = await verifyJWT(token, secretKey)
-            if (decodedPayload.tokenVersion === this.tokenVersion){
-                return decodedPayload
+            console.log("TOKEN VERSIONS: ", tokenVersion, decodedPayload.tokenVersion)
+            if(decodedPayload.tokenVersion !== tokenVersion){
+                return false
             }
-            return false
+            return decodedPayload
         }
         catch(err){
             console.log('ERROR WHEN VALIDATING ACCESS TOKEN / INVALID TOKEN')

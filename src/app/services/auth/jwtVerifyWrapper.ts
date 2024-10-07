@@ -3,8 +3,8 @@ import { JwtPayload } from 'jsonwebtoken'
 
 
 interface CustomPayload extends JwtPayload {
-    username?: string
-    tokenVersion?: number
+    userId: string
+    tokenVersion: number
 }
 
 const verifyJWT = (token: string, secretKey: string, options = {}): Promise<CustomPayload> => {

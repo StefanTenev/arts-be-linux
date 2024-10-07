@@ -1,75 +1,68 @@
 import { Request, Response, NextFunction } from 'express';
-import AccessJWT from 'app/services/auth/accessJWT';
-import RefreshJWT from 'app/services/auth/refreshJWT';
-import jwt, {JwtPayload} from 'jsonwebtoken';
-
-
-import verifyJWT from 'app/services/auth/jwtVerifyWrapper';
-
+import validateJWT from '../services/auth2/validateJWT';
+import generateJWT from '../services/auth2/generateJWT';
+import incrementTokenVersion from '../services/auth/incrementTokenVersion';
 
 //@TODO - this whole faking mess needs a fix
 
-interface customRequest extends Request {
-    // user: JwtPayload | undefined
-  newAccessToken: string
-  newRefreshToken: string
-}
+export const vJWTMiddleware = async (req: Request, res: Response, next: NextFunction) => {
 
-export const vJWTMiddleware = async (req: customRequest, res: Response, next: NextFunction) => {
-  console.log(req.cookies)
-  const username: string | undefined = req.body.username;
-  const userId: string | undefined = req.body.userId
+  // get current tokens
   const refreshToken: string | undefined = req.cookies['refreshJWT']
-  let accessToken: string | undefined = req.header('Authorization')?.replace('Bearer ', '');
-
-  if(!username || !userId){
-    return res.status(400).json({ message: 'Username or id not received'})
-  }
-
-  const accessJWT = new AccessJWT(username, userId)
-  const refreshJWT = new RefreshJWT(username, userId)
+  const accessToken: string | undefined = req.header('Authorization')?.replace('Bearer ', '');
 
   if(accessToken){
 
+    console.log(accessToken)
+    // if access token is present => valdiate and go to next 
     try{
-      await verifyJWT(accessToken, process.env.ACCESS_TOKEN_SECRET as string)
-      return next()
+      const isAccessJWTVerified = await validateJWT(accessToken, process.env.ACCESS_TOKEN_SECRET as string)
+      console.log('ACCESS TOKEN DETAILS: ', isAccessJWTVerified)
+      if(isAccessJWTVerified){
+        return next()
+      }
+      return res.status(401).json({ message: 'Invalid access and refresh token.' }); // Invalid token
+
     }
     catch(err){
-      return res.status(401).json({ message: 'Invalid access token.' }); // Invalid token
+      console.log('error when checking access token')
+      return res.status(500).json({ message: 'internal server error' }); // Invalid token
     }
 
+  // if there's no access token => check for refresh token
   }else if(refreshToken){
+
+    // if refresh token is present => valdiate and generate new tokens 
     try{
-      await verifyJWT(refreshToken, process.env.REFRESH_TOKEN_SECRET as string)
-      const newRefreshToken = await refreshJWT.generateToken()
-      const newAccessToken = await accessJWT.generateToken()
-      req.newRefreshToken = newRefreshToken
-      req.newAccessToken = newAccessToken
-      return next()
+      console.log(refreshToken)
+      const isRefreshJWTVerified = await validateJWT(refreshToken, process.env.REFRESH_TOKEN_SECRET as string)
+  
+      if(isRefreshJWTVerified){
+
+        console.log('REFRESH TOKEN DETAILS: ', isRefreshJWTVerified)
+        // increment to version the token 
+        await incrementTokenVersion(isRefreshJWTVerified.id)
+        const refreshJWTExpire = 604800 // 7 days in sec
+        const accessJWTExpire = 900 // 15 min in sec
+        const newRefreshToken = await generateJWT(refreshJWTExpire, isRefreshJWTVerified.id)
+        const newAccessToken = await generateJWT(accessJWTExpire, isRefreshJWTVerified.id)
+        
+        req.newRefreshToken = newRefreshToken
+        req.newAccessToken = newAccessToken
+        req.user = isRefreshJWTVerified
+        return next()
+      }
     }
     catch(err){
-      return res.status(401).json({ message: 'Invalid refresh token.' }); // Invalid token
+      console.log('error when checking refresh token')
+      return res.status(500).json({ message: 'internal server error' }); // Invalid token
     }
+
   }
 
-  // if(!accessToken && refreshToken){
-
-  //   //@TODO - have to check if this return actually returns a response out of the middleware, or just out of the jwt verify (not sure how the jwt.verify works fully)
-    
-    // try{
-    //   await verifyJWT(refreshToken, process.env.REFRESH_TOKEN_SECRET as string)
-    //   accessToken = await accessJWT.generateToken()
-    //   req.accessToken = accessToken
-    //   return next()
-    // }
-    // catch(err){
-    //   return res.status(401).json({ message: 'Invalid refresh token.' }); // Invalid token
-    // }
-
-  // }
-
   if (!accessToken && !refreshToken) {
+    
+    console.log('no tokens')
     return res.status(401).json({ message: 'Access denied. No access JWT provided.', jwt: 'None' });
   }
 

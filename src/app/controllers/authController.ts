@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
-// import UserController from "./users/userController";
 import userRepository from "../../database/entities/users/userRepository";
 import bcrypt from 'bcrypt';
 import CSRFT from "../services/auth/CSRFT";
-import AccessJWT from "../services/auth/accessJWT";
-import RefreshJWT from "../services/auth/refreshJWT";
-import { getRefreshJWTHolder } from "../services/auth/getTokenHolder";
+
+import generateJWT from "../services/auth2/generateJWT";
+import incrementTokenVersion from "@services/auth/incrementTokenVersion";
 
 export const loginUser = async (req: Request, res: Response) => {
-    const { username, password } = req.body;
 
+    const { username, password } = req.body;
+    console.log("LOGGED IN!")
     const existingUser = await userRepository().findOne({
         where: { username }
     });
@@ -26,18 +26,20 @@ export const loginUser = async (req: Request, res: Response) => {
         .json({ message: "Invalid credentials." });
     }
 
-    const csrft = new CSRFT(existingUser.id)
-    const accessJWT = new AccessJWT(existingUser.username, existingUser.id)
-    const refreshJWT = new RefreshJWT(existingUser.username, existingUser.id)
-    
-    const accessToken = await accessJWT.generateToken();
-    const refreshToken = await refreshJWT.generateToken();
-    const csrfToken = await csrft.generateToken() 
+    const refreshJWTExpire = 604800 // 7 days in sec
+    const accessJWTExpire = 900 // 15 min in sec
 
+    console.log("SESSION FEEEEEECTHIIING")
+    const newRefreshJWT = await generateJWT(refreshJWTExpire, existingUser.id)
+    const newAccessJWT = await generateJWT(accessJWTExpire, existingUser.id)
+
+    const newCSRFT = await new CSRFT(existingUser.id).generateToken()
+
+    console.log("LOGIN CONTROLLER RJWT: ", newRefreshJWT)
     return res.status(200) 
         .cookie(
             'refreshJWT', 
-            refreshToken, 
+            newRefreshJWT, 
             { 
                 httpOnly: true, 
                 maxAge: 1000 * 60 * 60 * 24,
@@ -48,17 +50,19 @@ export const loginUser = async (req: Request, res: Response) => {
         )
         .json({ 
                 message: `User ${username} authenticated successfully.`,
-                accessToken,
-                csrfToken,
+                newAccessJWT,
+                newCSRFT,
                 user: {
                     id: existingUser.id,
-                    email: existingUser.email
-                },
+                    email: existingUser.email,
+                    username: existingUser.username
+                }
             });
     
 }
 
 // @ TODO - consider logic for validating the user...
+// @TODO - consider if we need to increment the token version here
 export const logoutUser = async (req: Request, res: Response) => {
 
     const { userId } = req.body;
@@ -66,56 +70,44 @@ export const logoutUser = async (req: Request, res: Response) => {
     await new CSRFT(userId).invalidateToken()
     // await new RefreshJWT(username, userId).invalidateToken(res)
     // await new AccessJWT(username, userId).invalidateToken()
-
-    // res.clearCookie('refreshJWT', {path:  '/'})
+    
+    await incrementTokenVersion(userId)
+    res.clearCookie('refreshJWT', {path:  '/'})
     res.status(200).json({ message: 'Logged out successfully'});
 
 }
 
 export const session = async (req: Request, res: Response) => {
-    console.log(req.cookies)
-    const refreshToken = req.cookies["refreshJWT"]
+    console.log("SESSION FEEEEEECTHIIING")
+    const newRefreshJWT = req.newRefreshToken
+    const newAccessJWT = req.newAccessToken
+    const user = req.user
+    console.log("COOKIES: ",req.cookies)
+    console.log('NEW REFRESH JWT:',newRefreshJWT)
 
-    if(!refreshToken){
-        return res.status(401).json({ message: "No refresh token found." })
-    }
-
-    const username = await getRefreshJWTHolder(refreshToken);
-
-
-    const existingUser = await userRepository().findOne({
-        where: { username: username }
-    })
-
-
-    if(existingUser){
-        const newCSRFT = new CSRFT(existingUser.id).generateToken()
-        const newAccessJWT = new AccessJWT(username, existingUser.id).generateToken()
-        const newRefreshJWT = new RefreshJWT(username, existingUser.id).generateToken()
+    if(user){
+        const newCSRFT = new CSRFT(user.id).generateToken()
 
         return res.status(200)
-            .cookie(
-                'refreshJWT', 
-                newRefreshJWT, 
-                { 
-                    httpOnly: true, 
-                    maxAge: 1000 * 60 * 60 * 24,
-                    sameSite: 'none',
-                    path: "/",
-                    secure: true,
-                }
-            )
-            .json({ 
-                message:"successfully retrieved session", 
-                newCSRFT, 
-                newAccessJWT,
-                user: {
-                    username: existingUser.username,
-                    id: existingUser.id,
-                    email: existingUser.email
-                },
-            })
+        .cookie(
+            'refreshJWT', 
+            newRefreshJWT, 
+            { 
+                httpOnly: true, 
+                maxAge: 1000 * 60 * 60 * 24,
+                sameSite: 'none',
+                path: "/",
+                secure: true,
+            }
+        )
+        .json({ 
+            message:"successfully retrieved session", 
+            csrfToken: newCSRFT, 
+            accessToken: newAccessJWT,
+            user,
+        })
     }
+
 
     return res.status(404).json({ message: "fak yo faqer"})
 

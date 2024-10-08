@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany } from "typeorm"
+import { UserFoodList } from "../userFoodLists/UserFoodList"
 
 @Entity()
 @Unique(["email", "username"])
@@ -30,5 +31,8 @@ export class User {
     created_at!: Date;
 
     @Column({ default: 0 })
-    tokenVersion!: number;
+    tokenVersion: number = 0;
+
+    @OneToMany(() => UserFoodList, (userFoodList) => userFoodList.user)
+    userFoodsList: UserFoodList[] = [];
 }

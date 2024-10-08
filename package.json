@@ -3,20 +3,19 @@
    "version": "1.0.0",
    "main": "index.js",
    "nodemonConfig": {
-          "ignore":
-            [
-              "**/*.test.ts",
-              "**/*.spec.ts",
-              ".git",
-              "node_modules"
-            ],
-          "watch": [
-            "src"
-          ],
-          "exec": "node -r tsconfig-paths/register -r ts-node/register ./src/index.ts",
-          "ext": "ts, js"
-        },
-    "scripts": {
+      "ignore": [
+         "**/*.test.ts",
+         "**/*.spec.ts",
+         ".git",
+         "node_modules"
+      ],
+      "watch": [
+         "src"
+      ],
+      "exec": "node -r tsconfig-paths/register -r ts-node/register ./src/index.ts",
+      "ext": "ts, js"
+   },
+   "scripts": {
       "dev": "nodemon",
       "test": "echo \"Error: no test specified\" && exit 1",
       "start": "typeorm-ts-node-commonjs",
@@ -32,6 +31,7 @@
    "description": "",
    "dependencies": {
       "bcrypt": "^5.1.1",
+      "class-validator": "^0.14.1",
       "cookie-parser": "^1.4.6",
       "cors": "^2.8.5",
       "express": "^4.21.0",

@@ -13,11 +13,12 @@ export const vJWTMiddleware = async (req: Request, res: Response, next: NextFunc
 
   if(accessToken){
 
-    console.log(accessToken)
+
     // if access token is present => valdiate and go to next 
     try{
+
       const isAccessJWTVerified = await validateJWT(accessToken, process.env.ACCESS_TOKEN_SECRET as string)
-      console.log('ACCESS TOKEN DETAILS: ', isAccessJWTVerified)
+
       if(isAccessJWTVerified){
         return next()
       }
@@ -25,7 +26,7 @@ export const vJWTMiddleware = async (req: Request, res: Response, next: NextFunc
 
     }
     catch(err){
-      console.log('error when checking access token')
+
       return res.status(500).json({ message: 'internal server error' }); // Invalid token
     }
 
@@ -34,12 +35,10 @@ export const vJWTMiddleware = async (req: Request, res: Response, next: NextFunc
 
     // if refresh token is present => valdiate and generate new tokens 
     try{
-      console.log(refreshToken)
       const isRefreshJWTVerified = await validateJWT(refreshToken, process.env.REFRESH_TOKEN_SECRET as string)
   
       if(isRefreshJWTVerified){
 
-        console.log('REFRESH TOKEN DETAILS: ', isRefreshJWTVerified)
         // increment to version the token 
         await incrementTokenVersion(isRefreshJWTVerified.id)
         const refreshJWTExpire = 604800 // 7 days in sec
@@ -54,7 +53,6 @@ export const vJWTMiddleware = async (req: Request, res: Response, next: NextFunc
       }
     }
     catch(err){
-      console.log('error when checking refresh token')
       return res.status(500).json({ message: 'internal server error' }); // Invalid token
     }
 
@@ -62,7 +60,6 @@ export const vJWTMiddleware = async (req: Request, res: Response, next: NextFunc
 
   if (!accessToken && !refreshToken) {
     
-    console.log('no tokens')
     return res.status(401).json({ message: 'Access denied. No access JWT provided.', jwt: 'None' });
   }
 

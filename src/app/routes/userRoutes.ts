@@ -8,6 +8,7 @@ const userController = new UserController();
 
 userRoutes.get('/', userController.getAll);
 userRoutes.get('/:username', userController.getOne);
+
 userRoutes.post('/', userController.post);
 userRoutes.put('/:username', userController.put);
 userRoutes.delete('/:id', userController.delete)

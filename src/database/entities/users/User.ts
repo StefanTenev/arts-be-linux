@@ -34,5 +34,5 @@ export class User {
     tokenVersion: number = 0;
 
     @OneToMany(() => UserFoodList, (userFoodList) => userFoodList.user)
-    userFoodsList: UserFoodList[] = [];
+    userFoodsList!: UserFoodList[]
 }

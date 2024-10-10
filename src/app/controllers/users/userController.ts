@@ -87,7 +87,7 @@ export default class UserController {
         try{
             this.userRepository.merge(user, req.body);
             await this.userRepository.save(user);
-            return res.json(user);
+            return res.status(200).json(user);
         }
         catch(err){
             return res.status(500)
@@ -102,19 +102,19 @@ export default class UserController {
         })
 
         if (!user){
-            return res.status(401)
+            return res.status(404)
                 .json({ message: "Failed to delete user - user not found." })
         }
              
         try{
-            const results = await this.userRepository.remove(user)
+            await this.userRepository.remove(user)
 
             return res.status(204)
-                .send(results)
+                .json({ message: "User deleted successfully" })
         }
         catch(err){
             return res.status(500)
-                .json({ message: "Failer to delete user: ", err})
+                .json({ message: "Failed to delete user: ", err})
         }
     }
 

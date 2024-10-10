@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from "typeorm"
 
 import { User } from "../users/User"
 
@@ -21,12 +21,8 @@ export class Diet {
     @Column()
     carbohydrates: number = 0
 
-    @ManyToOne( () => User )
-    @JoinColumn()
-    user!: User
-
-    // @OneToOne(() => User, { onDelete: 'CASCADE' })
-    // @JoinColumn()  // Ensures the foreign key is in the GoalEyes table
-    // user: User;
+    @OneToOne(() => User, { onDelete: 'CASCADE' })
+    @JoinColumn()  // Ensures the foreign key is in the GoalEyes table
+    user!: User;
 
 }

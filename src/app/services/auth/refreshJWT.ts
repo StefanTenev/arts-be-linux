@@ -47,7 +47,6 @@ export default class RefreshJWT {
 
         try{
             const decodedPayload: CustomPayload = await verifyJWT(token, secretKey)
-            console.log("TOKEN VERSIONS: ", tokenVersion, decodedPayload.tokenVersion)
             if(decodedPayload.tokenVersion !== tokenVersion){
                 return false
             }

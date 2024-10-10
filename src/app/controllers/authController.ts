@@ -9,7 +9,6 @@ import incrementTokenVersion from "@services/auth/incrementTokenVersion";
 export const loginUser = async (req: Request, res: Response) => {
 
     const { username, password } = req.body;
-    console.log("LOGGED IN!")
     const existingUser = await userRepository().findOne({
         where: { username }
     });
@@ -29,13 +28,11 @@ export const loginUser = async (req: Request, res: Response) => {
     const refreshJWTExpire = 604800 // 7 days in sec
     const accessJWTExpire = 900 // 15 min in sec
 
-    console.log("SESSION FEEEEEECTHIIING")
     const newRefreshJWT = await generateJWT(refreshJWTExpire, existingUser.id)
     const newAccessJWT = await generateJWT(accessJWTExpire, existingUser.id)
 
     const newCSRFT = await new CSRFT(existingUser.id).generateToken()
 
-    console.log("LOGIN CONTROLLER RJWT: ", newRefreshJWT)
     return res.status(200) 
         .cookie(
             'refreshJWT', 
@@ -78,12 +75,9 @@ export const logoutUser = async (req: Request, res: Response) => {
 }
 
 export const session = async (req: Request, res: Response) => {
-    console.log("SESSION FEEEEEECTHIIING")
     const newRefreshJWT = req.newRefreshToken
     const newAccessJWT = req.newAccessToken
     const user = req.user
-    console.log("COOKIES: ",req.cookies)
-    console.log('NEW REFRESH JWT:',newRefreshJWT)
 
     if(user){
         const newCSRFT = new CSRFT(user.id).generateToken()

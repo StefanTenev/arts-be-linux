@@ -41,6 +41,6 @@ export default class DietMeasurementDTO {
 
     @IsString({ message: isStringErr("UserId")})
     @IsNotEmpty({ message: isNotEmptyErr("UserId") })
-    userId!: string;
+    user!: string;
 
 }

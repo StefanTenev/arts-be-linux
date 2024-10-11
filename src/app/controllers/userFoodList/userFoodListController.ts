@@ -91,11 +91,12 @@ export const postUserFoodList = async ( req: Request, res: Response ) => {
 }
 
 
-export const deleteUserFoodEntryByFoodId = async ( req: Request, res: Response ) => {
+export const deleteUserFoodEntry = async ( req: Request, res: Response ) => {
 
-    const foodId = req.body.foodId
+    const entryId = req.body.entryid
+
     const userFoodEntry: UserFoodList | null = await userFoodListRepository.findOne({
-        where: { food: { id: foodId } }
+        where: { id: entryId }
     })
 
     if(!userFoodEntry){

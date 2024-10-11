@@ -30,7 +30,7 @@ export class DietMeasurement {
     activity_level!: ActivityLevel
 
     @OneToOne(() => User, { onDelete: 'CASCADE' })
-    @JoinColumn()  // Ensures the foreign key is in the GoalEyes table
+    @JoinColumn()  // Ensures the foreign key is in the DietMeasurement table
     user!: User;
 
 }

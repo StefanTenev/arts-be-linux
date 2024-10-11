@@ -1,5 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany, OneToOne } from "typeorm"
 import { UserFoodList } from "../userFoodLists/UserFoodList"
+import { DietMeasurement } from "../dietMeasurements/DietMeasurement"
+import { Diet } from "../diets/Diet"
 
 @Entity()
 @Unique(["email", "username"])
@@ -35,4 +37,10 @@ export class User {
 
     @OneToMany(() => UserFoodList, (userFoodList) => userFoodList.user)
     userFoodsList!: UserFoodList[]
+
+    @OneToOne(() => DietMeasurement, (dietMeasurement) => dietMeasurement.user)
+    dietMeasurement!: DietMeasurement
+
+    @OneToOne(() => Diet, (diet) => diet.user)
+    diet!: Diet
 }

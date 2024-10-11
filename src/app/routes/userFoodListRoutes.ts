@@ -12,6 +12,6 @@ userFoodListRoutes.get('/:userId', userFoodListController.getUserFoodListByUser)
 
 userFoodListRoutes.post('/', userFoodListController.postUserFoodList);
 // userFoodListRoutes.put('/', userFoodListController.putFood);
-userFoodListRoutes.delete('/', userFoodListController.deleteUserFoodEntryByFoodId)
+userFoodListRoutes.delete('/', userFoodListController.deleteUserFoodEntry)
 
 export default userFoodListRoutes 

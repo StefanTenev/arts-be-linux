@@ -1,17 +1,17 @@
 export enum ActivityLevel {
-    Sedetary = 1,
-    Sparse = 2,
-    Fair = 3,
-    HIgh = 4,
-    Extreme = 5
+    sedetary = 1,
+    sparse = 2,
+    fair = 3,
+    high = 4,
+    extreme = 5
 }
 
 export enum DietGoal {
-    Loss = 1,
-    LightLoss = 2,
-    Maintain = 3,
-    LightGain = 4,
-    Gain = 5
+    loss = 1,
+    lightLoss = 2,
+    maintain = 3,
+    lightGain = 4,
+    gain = 5
 }
 
 export enum Sex {
